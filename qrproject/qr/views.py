@@ -2,6 +2,9 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import *
+import cv2
+from PIL import Image
+import numpy as np
 
 class CreateQrAPIView(APIView):
     serializer_class = QRCodeSerializer
@@ -23,14 +26,13 @@ class CreateQrAPIView(APIView):
                 status = status.HTTP_400_BAD_REQUEST)
 
 
-class ImageUploadView(APIView):
+class DecodeQrView(APIView):
+    serializer_class = QRCodeSerializer
     def post(self, request, *args, **kwargs):
         # Obtener la imagen del request
-        imagen = request.data.get('imagen')
-
-        # Aquí puedes realizar cualquier procesamiento que necesites con la imagen
-        # Por ejemplo, puedes guardarla en tu sistema de archivos, base de datos, etc.
-
-        # Devuelve la URL predefinida
-        url_predefinida = "https://ejemplo.com/imagen_predefinida.jpg"
-        return Response({'url': url_predefinida}, status=status.HTTP_201_CREATED)
+        image = request.data.get('image')
+        pil_image = Image.open(image)
+        image_np = np.array(pil_image)
+        detector = cv2.QRCodeDetector()
+        data = detector.detectAndDecode(image_np)
+        return Response({'data': data[0]}, status=status.HTTP_201_CREATED)
